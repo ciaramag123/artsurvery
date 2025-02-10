@@ -76,24 +76,24 @@ def serve_image(category, filename):
         return send_from_directory(directory, filename)
     return jsonify({"error": "Category not found"}), 404
 
-# Route to submit the survey
 @app.route('/submit-survey', methods=['POST'])
 def submit_survey():
-    """Receives and saves survey responses to the database."""
     try:
         data = request.json
-        print("Received Data:", data)  # Debug log for submitted data
+        print("Received Data:", data)  # Debug: Print incoming data
 
         if not data or "county" not in data or "rankings" not in data:
             return jsonify({"error": "Invalid data format"}), 400
 
-        # Create a new SurveyResponse entry
+        # Add SurveyResponse entry
         survey_response = SurveyResponse(county=data["county"])
+        print(f"Adding SurveyResponse for county: {data['county']}")
         db.session.add(survey_response)
-        db.session.commit()  # Commit to get the survey ID
+        db.session.commit()
 
-        # Save individual rankings
+        # Add ArtworkRanking entries
         for ranking in data["rankings"]:
+            print(f"Processing ranking: {ranking}")
             if not ranking.get("rank") or not ranking.get("museum") or not ranking.get("filename"):
                 return jsonify({"error": "Incomplete ranking data."}), 400
 
@@ -106,11 +106,12 @@ def submit_survey():
             db.session.add(artwork_ranking)
 
         db.session.commit()
+        print("Survey submitted successfully!")
 
         return jsonify({"message": "Survey submitted successfully!"})
     except Exception as e:
+        print(f"Error during submission: {e}")
         return jsonify({"error": str(e)}), 500
-
 
 
 # Route to fetch counties for the dropdown
