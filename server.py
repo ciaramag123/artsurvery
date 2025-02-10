@@ -8,7 +8,7 @@ import random
 app = Flask(__name__, template_folder="templates")
 
 # Configure the database
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///instance/responses.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://survey_admin:Sxqd1945@localhost/survey_db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize SQLAlchemy
