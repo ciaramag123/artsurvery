@@ -8,7 +8,7 @@ import random
 app = Flask(__name__, template_folder="templates")
 
 # Configure the database
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///responses.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///instance/responses.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize SQLAlchemy
@@ -31,7 +31,6 @@ class ArtworkRanking(db.Model):
 
 # Create the database tables
 with app.app_context():
-    print(f"Database path: {db.engine.url.database}")  # Debug: Verify the database path
     db.create_all()
 
 # Image directories
@@ -77,42 +76,41 @@ def serve_image(category, filename):
         return send_from_directory(directory, filename)
     return jsonify({"error": "Category not found"}), 404
 
+# Route to submit the survey
 @app.route('/submit-survey', methods=['POST'])
 def submit_survey():
+    """Receives and saves survey responses to the database."""
     try:
         data = request.json
-        print("Received Data:", data)  # Debug: Print incoming data
+        print("Received Data:", data)  # Debug log for submitted data
 
         if not data or "county" not in data or "rankings" not in data:
             return jsonify({"error": "Invalid data format"}), 400
 
-        # Add SurveyResponse entry
+        # Create a new SurveyResponse entry
         survey_response = SurveyResponse(county=data["county"])
-        print(f"Adding SurveyResponse for county: {data['county']}")
         db.session.add(survey_response)
-        db.session.commit()
+        db.session.commit()  # Commit to get the survey ID
 
-        # Add ArtworkRanking entries
+        # Save individual rankings
         for ranking in data["rankings"]:
-            print(f"Processing ranking: {ranking}")
             if not ranking.get("rank") or not ranking.get("museum") or not ranking.get("filename"):
                 return jsonify({"error": "Incomplete ranking data."}), 400
 
             artwork_ranking = ArtworkRanking(
                 survey_id=survey_response.id,
-                rank=int(ranking["rank"]),  # Convert rank to integer
+                rank=ranking["rank"],
                 museum=ranking["museum"],
                 filename=ranking["filename"],
             )
             db.session.add(artwork_ranking)
 
         db.session.commit()
-        print("Survey submitted successfully!")
 
         return jsonify({"message": "Survey submitted successfully!"})
     except Exception as e:
-        print(f"Error during submission: {e}")
         return jsonify({"error": str(e)}), 500
+
 
 
 # Route to fetch counties for the dropdown
@@ -150,10 +148,8 @@ def view_responses():
                 "rankings": rankings_list
             })
 
-        print("Responses fetched:", result)  # Debug: Log responses
         return jsonify(result)
     except Exception as e:
-        print(f"Error fetching responses: {e}")
         return jsonify({"error": str(e)}), 500
 
 
