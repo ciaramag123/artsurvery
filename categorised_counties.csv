@@ -1,0 +1,27 @@
+Unnamed: 0,County,Population_Density,Education,Irish_Language,Unemployment,Population_by_Age_Sex,Salary,Cluster,Cluster_Name
+0,Carlow,-0.3452,0.1876,0.0192,0.8986,-0.32,-0.5604,3,Rural and Developing Counties
+1,Cavan,-0.3359,0.7481,-0.2629,0.4038,-0.31,-0.6416,3,Rural and Developing Counties
+2,Clare,-0.5215,-1.2767,1.1271,-0.703,-0.27,0.3182,0,Affluent Commuter Counties
+3,Cork,0.2332,-0.8559,-1.9518,-2.0139,0.19,1.021,2,Regional Hubs & University Cities
+4,Donegal,-1.471,3.1813,0.1322,1.7562,-0.24,-1.5532,4,Economically Challenged & Peripheral Counties
+5,Dublin,3.6842,-0.7872,-3.6708,0.1945,1.4,2.7973,1,Urban Economic Core
+6,Galway,-0.8456,-1.3266,-1.735,-0.6819,-0.1,0.3623,2,Regional Hubs & University Cities
+7,Kerry,-0.6153,0.0331,0.7989,0.1582,-0.25,-0.8169,3,Rural and Developing Counties
+8,Kildare,1.2481,-1.2862,0.5695,-1.4035,-0.14,1.6945,0,Affluent Commuter Counties
+9,Kilkenny,0.0173,-0.101,0.6892,-0.7136,-0.29,-0.1091,0,Affluent Commuter Counties
+10,Laois,-0.0126,-0.344,0.287,-0.1331,-0.3,-0.113,0,Affluent Commuter Counties
+11,Leitrim,-0.6819,0.1763,0.4071,0.3062,-0.35,-0.82,3,Rural and Developing Counties
+12,Limerick,-0.3459,-0.4045,0.3987,-0.1637,-0.16,0.5324,0,Affluent Commuter Counties
+13,Longford,0.1387,-0.2346,-0.329,1.7169,-0.34,-1.0114,3,Rural and Developing Counties
+14,Louth,0.1835,0.7641,-0.4011,2.1568,-0.25,-0.1917,4,Economically Challenged & Peripheral Counties
+15,Mayo,-0.9145,0.6056,0.8894,-0.1036,-0.27,-0.677,3,Rural and Developing Counties
+16,Meath,2.2203,-0.6377,0.3004,-1.2291,-0.18,1.1605,0,Affluent Commuter Counties
+17,Monaghan,-0.3006,1.7086,0.2314,-0.715,-0.32,-1.3354,4,Economically Challenged & Peripheral Counties
+18,Offaly,-0.0382,0.7034,-0.0675,0.3214,-0.3,-0.5277,3,Rural and Developing Counties
+19,Roscommon,-0.4125,-0.0767,0.5255,-0.8815,-0.32,-0.3929,0,Affluent Commuter Counties
+20,Sligo,-0.1756,-0.9534,0.4614,-0.1432,-0.32,-0.2769,0,Affluent Commuter Counties
+21,Tipperary,-0.3439,-0.0343,0.6772,-1.133,-0.24,-0.4653,0,Affluent Commuter Counties
+22,Waterford,-0.2707,0.2176,0.4631,0.6285,-0.26,-0.1178,3,Rural and Developing Counties
+23,Westmeath,0.0632,-0.5935,0.0666,0.7314,-0.29,0.0004,3,Rural and Developing Counties
+24,Wexford,-0.3507,1.4319,-0.1061,1.1859,-0.24,-0.7819,4,Economically Challenged & Peripheral Counties
+25,Wicklow,0.1931,-0.5052,0.2086,-0.2268,-0.25,1.4818,0,Affluent Commuter Counties

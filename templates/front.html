@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painting Preference Survey</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        h1 { text-align: center; }
+        .gallery-container { display: flex; flex-wrap: wrap; justify-content: center; }
+        .image-container { margin: 20px; text-align: center; width: 300px; }
+        img { 
+            width: 300px; 
+            height: 300px; 
+            object-fit: contain; /* Ensure the whole image fits within the container */
+            border: 2px solid black; 
+            border-radius: 8px; 
+        }
+        .rank-buttons { display: flex; justify-content: center; gap: 5px; margin-top: 10px; }
+        .rank-button { padding: 5px 10px; cursor: pointer; border: 1px solid black; border-radius: 5px; background-color: #f0f0f0; }
+        .rank-button.selected { background-color: #4caf50; color: white; }
+        button { margin-top: 20px; padding: 10px 20px; }
+        .county-container { text-align: center; margin-bottom: 20px; }
+    </style>
+    <script>
+        let usedRanks = new Set();
+
+        function selectRank(button, imageIndex, rank) {
+            const rankButtonsContainer = button.parentElement;
+            const previousRank = rankButtonsContainer.dataset.selectedRank;
+
+            if (previousRank === rank.toString()) {
+                rankButtonsContainer.dataset.selectedRank = "";
+                usedRanks.delete(rank.toString());
+                button.classList.remove("selected");
+                return;
+            }
+
+            if (usedRanks.has(rank.toString())) {
+                alert("This rank is already used. Please choose a different rank.");
+                return;
+            }
+
+            if (previousRank) {
+                usedRanks.delete(previousRank);
+                const previousButton = document.querySelector(
+                    `.rank-button[data-index="${imageIndex}"][data-rank="${previousRank}"]`
+                );
+                if (previousButton) {
+                    previousButton.classList.remove("selected");
+                }
+            }
+
+            rankButtonsContainer.dataset.selectedRank = rank.toString();
+            usedRanks.add(rank.toString());
+            button.classList.add("selected");
+        }
+
+        async function loadImages() {
+            const response = await fetch("/get-images");
+            const data = await response.json();
+            const gallery = document.querySelector(".gallery-container");
+
+            data.forEach((image, index) => {
+                const imgContainer = document.createElement("div");
+                imgContainer.classList.add("image-container");
+
+                const img = document.createElement("img");
+                img.src = `/images/${image.hidden}/${image.filename}`;  // Use Flask route for images
+                img.alt = "Artwork";
+
+                const rankButtons = document.createElement("div");
+                rankButtons.classList.add("rank-buttons");
+                rankButtons.dataset.selectedRank = "";
+                rankButtons.dataset.museum = image.hidden;
+                rankButtons.dataset.filename = image.filename;
+
+                for (let i = 1; i <= 6; i++) {
+                    const button = document.createElement("button");
+                    button.classList.add("rank-button");
+                    button.textContent = i;
+                    button.type = "button";
+                    button.dataset.index = index;
+                    button.dataset.rank = i;
+                    button.onclick = () => selectRank(button, index, i);
+                    rankButtons.appendChild(button);
+                }
+
+                imgContainer.appendChild(img);
+                imgContainer.appendChild(rankButtons);
+                gallery.appendChild(imgContainer);
+            });
+        }
+
+        async function loadCounties() {
+            const response = await fetch("/get-counties");
+            const counties = await response.json();
+            const countyDropdown = document.getElementById("county");
+
+            counties.forEach(county => {
+                const option = document.createElement("option");
+                option.value = county;
+                option.textContent = county;
+                countyDropdown.appendChild(option);
+            });
+        }
+
+        async function submitSurvey() {
+            const county = document.getElementById("county").value;
+            if (!county) {
+                alert("Please select a county.");
+                return;
+            }
+
+            const data = { county, rankings: [] };
+            document.querySelectorAll(".rank-buttons").forEach(rankButtons => {
+                const selectedRank = rankButtons.dataset.selectedRank;
+                const museum = rankButtons.dataset.museum;
+                const filename = rankButtons.dataset.filename;
+
+                if (!selectedRank) {
+                    alert("Please rank all artworks before submitting.");
+                    throw new Error("Missing rankings.");
+                }
+
+                data.rankings.push({
+                    rank: selectedRank,
+                    museum,
+                    filename,
+                });
+            });
+
+            const response = await fetch("/submit-survey", {
+                method: "POST",
+                body: JSON.stringify(data),
+                headers: { "Content-Type": "application/json" }
+            });
+
+            const result = await response.json();
+            alert(result.message);
+        }
+
+        window.onload = () => {
+            loadCounties();
+            loadImages();
+        };
+    </script>
+</head>
+<body>
+    <h1>Art Survey</h1>
+
+    <div class="county-container">
+        <label for="county">Select your county:</label>
+        <select name="county" id="county" required>
+            <option value="">Select a county</option>
+        </select>
+    </div>
+
+    <form id="survey-form">
+        <div class="gallery-container"></div>
+        <button type="button" onclick="submitSurvey()">Submit</button>
+    </form>
+</body>
+</html>
