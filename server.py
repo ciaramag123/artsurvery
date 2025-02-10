@@ -31,6 +31,7 @@ class ArtworkRanking(db.Model):
 
 # Create the database tables
 with app.app_context():
+    print(f"Database path: {db.engine.url.database}")  # Debug: Verify the database path
     db.create_all()
 
 # Image directories
@@ -99,7 +100,7 @@ def submit_survey():
 
             artwork_ranking = ArtworkRanking(
                 survey_id=survey_response.id,
-                rank=ranking["rank"],
+                rank=int(ranking["rank"]),  # Convert rank to integer
                 museum=ranking["museum"],
                 filename=ranking["filename"],
             )
@@ -149,8 +150,10 @@ def view_responses():
                 "rankings": rankings_list
             })
 
+        print("Responses fetched:", result)  # Debug: Log responses
         return jsonify(result)
     except Exception as e:
+        print(f"Error fetching responses: {e}")
         return jsonify({"error": str(e)}), 500
 
 
