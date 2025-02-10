@@ -22,165 +22,162 @@
         button { margin-top: 20px; padding: 10px 20px; }
         .county-container { text-align: center; margin-bottom: 20px; }
     </style>
-    <script>
-        let usedRanks = new Set();
+<script>
+    function selectRank(button, imageIndex, rank) {
+        const rankButtonsContainer = button.parentElement;
+        const previousButton = rankButtonsContainer.querySelector(".selected");
 
-        function selectRank(button, imageIndex, rank) {
-            const rankButtonsContainer = button.parentElement;
-            const previousRank = rankButtonsContainer.dataset.selectedRank;
-
-            if (previousRank === rank.toString()) {
-                rankButtonsContainer.dataset.selectedRank = "";
-                usedRanks.delete(rank.toString());
-                button.classList.remove("selected");
-                return;
-            }
-
-            if (usedRanks.has(rank.toString())) {
-                alert("This rank is already used. Please choose a different rank.");
-                return;
-            }
-
-            if (previousRank) {
-                usedRanks.delete(previousRank);
-                const previousButton = document.querySelector(
-                    `.rank-button[data-index="${imageIndex}"][data-rank="${previousRank}"]`
-                );
-                if (previousButton) {
-                    previousButton.classList.remove("selected");
-                }
-            }
-
-            rankButtonsContainer.dataset.selectedRank = rank.toString();
-            usedRanks.add(rank.toString());
-            button.classList.add("selected");
+        if (previousButton) {
+            previousButton.classList.remove("selected");
         }
 
-        async function loadImages() {
-    const response = await fetch("/get-images");
-    const data = await response.json();
-    const gallery = document.querySelector(".gallery-container");
-
-    data.forEach((image, index) => {
-        const imgContainer = document.createElement("div");
-        imgContainer.classList.add("image-container");
-
-        const img = document.createElement("img");
-        img.src = `/images/${image.hidden}/${image.filename}`;
-        img.alt = "Artwork";
-
-        const rankButtons = document.createElement("div");
-        rankButtons.classList.add("rank-buttons");
-        rankButtons.dataset.selectedRank = ""; // Default to empty
-        rankButtons.dataset.museum = image.hidden; // Set category
-        rankButtons.dataset.filename = image.filename; // Set filename
-
-        for (let i = 1; i <= 6; i++) {
-            const button = document.createElement("button");
-            button.classList.add("rank-button");
-            button.textContent = i;
-            button.type = "button";
-            button.dataset.index = index;
-            button.dataset.rank = i;
-            button.onclick = () => selectRank(button, index, i);
-            rankButtons.appendChild(button);
-        }
-
-        imgContainer.appendChild(img);
-        imgContainer.appendChild(rankButtons);
-        gallery.appendChild(imgContainer);
-    });
-}
-
-
-        async function loadCounties() {
-            const response = await fetch("/get-counties");
-            const counties = await response.json();
-            const countyDropdown = document.getElementById("county");
-
-            counties.forEach(county => {
-                const option = document.createElement("option");
-                option.value = county;
-                option.textContent = county;
-                countyDropdown.appendChild(option);
-            });
-        }
-
-        async function submitSurvey() {
-    const county = document.getElementById("county").value;
-    if (!county) {
-        alert("Please select a county.");
-        return;
+        button.classList.add("selected");
+        rankButtonsContainer.dataset.selectedRank = rank.toString();
     }
 
-    const data = { county, rankings: [] };
+    async function loadImages() {
+        const response = await fetch("/get-images");
+        const data = await response.json();
+        const gallery = document.querySelector(".gallery-container");
 
-    let hasError = false; // Track errors in data collection
+        data.forEach((image, index) => {
+            const imgContainer = document.createElement("div");
+            imgContainer.classList.add("image-container");
 
-    document.querySelectorAll(".rank-buttons").forEach((rankButtons, index) => {
-        const selectedRank = rankButtons.dataset.selectedRank;
-        const museum = rankButtons.dataset.museum;
-        const filename = rankButtons.dataset.filename;
+            const img = document.createElement("img");
+            img.src = `/images/${image.hidden}/${image.filename}`;
+            img.alt = "Artwork";
 
-        console.log(`Artwork ${index + 1}:`, { selectedRank, museum, filename });
+            const rankButtons = document.createElement("div");
+            rankButtons.classList.add("rank-buttons");
+            rankButtons.dataset.selectedRank = ""; // Default to empty
+            rankButtons.dataset.museum = image.hidden; // Set category
+            rankButtons.dataset.filename = image.filename; // Set filename
 
-        // Validate if all required fields are present
-        if (!selectedRank || !museum || !filename) {
-            alert(`Error: Missing rank or metadata for artwork at index ${index + 1}.`);
-            hasError = true;
+            for (let i = 1; i <= 5; i++) {
+                const button = document.createElement("button");
+                button.classList.add("rank-button");
+                button.textContent = i;
+                button.type = "button";
+                button.dataset.index = index;
+                button.dataset.rank = i;
+                button.onclick = () => selectRank(button, index, i);
+                rankButtons.appendChild(button);
+            }
+
+            imgContainer.appendChild(img);
+            imgContainer.appendChild(rankButtons);
+            gallery.appendChild(imgContainer);
+        });
+    }
+
+    async function loadCounties() {
+        const response = await fetch("/get-counties");
+        const counties = await response.json();
+        const countyDropdown = document.getElementById("county");
+
+        counties.forEach(county => {
+            const option = document.createElement("option");
+            option.value = county;
+            option.textContent = county;
+            countyDropdown.appendChild(option);
+        });
+    }
+
+    async function submitSurvey() {
+        const county = document.getElementById("county").value;
+        if (!county) {
+            alert("Please select a county.");
             return;
         }
 
-        data.rankings.push({
-            rank: selectedRank,
-            museum,
-            filename,
+        const data = { county, rankings: [] };
+
+        document.querySelectorAll(".rank-buttons").forEach(rankButtons => {
+            const selectedRank = rankButtons.dataset.selectedRank;
+            const museum = rankButtons.dataset.museum;
+            const filename = rankButtons.dataset.filename;
+
+            if (!selectedRank) {
+                alert("Please give your preference to all artworks before submitting.");
+                return;
+            }
+
+            data.rankings.push({
+                rank: selectedRank,
+                museum,
+                filename,
+            });
         });
-    });
 
-    if (hasError) {
-        return; // Stop submission if any data is missing
-    }
+        try {
+            const response = await fetch("/submit-survey", {
+                method: "POST",
+                body: JSON.stringify(data),
+                headers: { "Content-Type": "application/json" },
+            });
 
-    console.log("Final Data to Submit:", data);
+            const result = await response.json();
+            if (result.error) {
+                throw new Error(result.error);
+            }
 
-    try {
-        const response = await fetch("/submit-survey", {
-            method: "POST",
-            body: JSON.stringify(data),
-            headers: { "Content-Type": "application/json" },
-        });
-
-        const result = await response.json();
-        if (result.error) {
-            throw new Error(result.error);
+            alert(result.message);
+        } catch (error) {
+            alert(`Submission failed: ${error.message}`);
         }
-
-        alert(result.message);
-    } catch (error) {
-        alert(`Submission failed: ${error.message}`);
     }
-}
 
-        window.onload = () => {
-            loadCounties();
-            loadImages();
-        };
-    </script>
+    window.onload = () => {
+        loadCounties();
+        loadImages();
+    };
+</script>
+
 </head>
 <body>
-    <h1>Art Survey</h1>
+    <header>
+        <h1>Art and Museum Collections Survey</h1>
+    </header>
+    <main>
+        <div class="explanation">
+            <p>
+                This survey is part of a research project investigating the relationship between museum collections
+                in Ireland and their surrounding socioeconomic and geographic factors. Museums play a crucial role in
+                preserving cultural heritage, but their collections often reflect historical, social, and economic
+                influences from their respective regions. 
+            </p>
+            <p>
+                The purpose of this study is to understand how museum collections align with the characteristics of
+                their local communities. By analyzing art preferences, we aim to explore whether there are
+                correlations between public taste and the type of art displayed in these institutions.
+            </p>
+            <p>
+                <b>How to Participate:</b>
+                <ul>
+                    <li>Select your county from the dropdown menu below.</li>
+                    <li>Rate each painting on a scale of 1 to 5, where:
+                        <ul>
+                            <li><b>5</b>: You strongly like it.</li>
+                            <li><b>1</b>: You strongly dislike it.</li>
+                        </ul>
+                    </li>
+                    <li>Click the "Submit" button to finalize your responses.</li>
+                </ul>
+            </p>
+        </div>
 
-    <div class="county-container">
-        <label for="county">Select your county:</label>
-        <select name="county" id="county" required>
-            <option value="">Select a county</option>
-        </select>
-    </div>
+        <div class="county-container">
+            <label for="county">Select your county:</label>
+            <select name="county" id="county" required>
+                <option value="">Select a county</option>
+            </select>
+        </div>
 
-    <form id="survey-form">
-        <div class="gallery-container"></div>
-        <button type="button" onclick="submitSurvey()">Submit</button>
-    </form>
+        <form id="survey-form">
+            <div class="gallery-container"></div>
+            <button type="button" onclick="submitSurvey()">Submit</button>
+        </form>
+    </main>
 </body>
 </html>
