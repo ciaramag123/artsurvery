@@ -57,40 +57,41 @@
         }
 
         async function loadImages() {
-            const response = await fetch("/get-images");
-            const data = await response.json();
-            const gallery = document.querySelector(".gallery-container");
+    const response = await fetch("/get-images");
+    const data = await response.json();
+    const gallery = document.querySelector(".gallery-container");
 
-            data.forEach((image, index) => {
-                const imgContainer = document.createElement("div");
-                imgContainer.classList.add("image-container");
+    data.forEach((image, index) => {
+        const imgContainer = document.createElement("div");
+        imgContainer.classList.add("image-container");
 
-                const img = document.createElement("img");
-                img.src = `/images/${image.hidden}/${image.filename}`;  // Use Flask route for images
-                img.alt = "Artwork";
+        const img = document.createElement("img");
+        img.src = `/images/${image.hidden}/${image.filename}`;
+        img.alt = "Artwork";
 
-                const rankButtons = document.createElement("div");
-                rankButtons.classList.add("rank-buttons");
-                rankButtons.dataset.selectedRank = "";
-                rankButtons.dataset.museum = image.hidden;
-                rankButtons.dataset.filename = image.filename;
+        const rankButtons = document.createElement("div");
+        rankButtons.classList.add("rank-buttons");
+        rankButtons.dataset.selectedRank = ""; // Default to empty
+        rankButtons.dataset.museum = image.hidden; // Set category
+        rankButtons.dataset.filename = image.filename; // Set filename
 
-                for (let i = 1; i <= 6; i++) {
-                    const button = document.createElement("button");
-                    button.classList.add("rank-button");
-                    button.textContent = i;
-                    button.type = "button";
-                    button.dataset.index = index;
-                    button.dataset.rank = i;
-                    button.onclick = () => selectRank(button, index, i);
-                    rankButtons.appendChild(button);
-                }
-
-                imgContainer.appendChild(img);
-                imgContainer.appendChild(rankButtons);
-                gallery.appendChild(imgContainer);
-            });
+        for (let i = 1; i <= 6; i++) {
+            const button = document.createElement("button");
+            button.classList.add("rank-button");
+            button.textContent = i;
+            button.type = "button";
+            button.dataset.index = index;
+            button.dataset.rank = i;
+            button.onclick = () => selectRank(button, index, i);
+            rankButtons.appendChild(button);
         }
+
+        imgContainer.appendChild(img);
+        imgContainer.appendChild(rankButtons);
+        gallery.appendChild(imgContainer);
+    });
+}
+
 
         async function loadCounties() {
             const response = await fetch("/get-counties");
@@ -106,39 +107,60 @@
         }
 
         async function submitSurvey() {
-            const county = document.getElementById("county").value;
-            if (!county) {
-                alert("Please select a county.");
-                return;
-            }
+    const county = document.getElementById("county").value;
+    if (!county) {
+        alert("Please select a county.");
+        return;
+    }
 
-            const data = { county, rankings: [] };
-            document.querySelectorAll(".rank-buttons").forEach(rankButtons => {
-                const selectedRank = rankButtons.dataset.selectedRank;
-                const museum = rankButtons.dataset.museum;
-                const filename = rankButtons.dataset.filename;
+    const data = { county, rankings: [] };
 
-                if (!selectedRank) {
-                    alert("Please rank all artworks before submitting.");
-                    throw new Error("Missing rankings.");
-                }
+    let hasError = false; // Track errors in data collection
 
-                data.rankings.push({
-                    rank: selectedRank,
-                    museum,
-                    filename,
-                });
-            });
+    document.querySelectorAll(".rank-buttons").forEach((rankButtons, index) => {
+        const selectedRank = rankButtons.dataset.selectedRank;
+        const museum = rankButtons.dataset.museum;
+        const filename = rankButtons.dataset.filename;
 
-            const response = await fetch("/submit-survey", {
-                method: "POST",
-                body: JSON.stringify(data),
-                headers: { "Content-Type": "application/json" }
-            });
+        console.log(`Artwork ${index + 1}:`, { selectedRank, museum, filename });
 
-            const result = await response.json();
-            alert(result.message);
+        // Validate if all required fields are present
+        if (!selectedRank || !museum || !filename) {
+            alert(`Error: Missing rank or metadata for artwork at index ${index + 1}.`);
+            hasError = true;
+            return;
         }
+
+        data.rankings.push({
+            rank: selectedRank,
+            museum,
+            filename,
+        });
+    });
+
+    if (hasError) {
+        return; // Stop submission if any data is missing
+    }
+
+    console.log("Final Data to Submit:", data);
+
+    try {
+        const response = await fetch("/submit-survey", {
+            method: "POST",
+            body: JSON.stringify(data),
+            headers: { "Content-Type": "application/json" },
+        });
+
+        const result = await response.json();
+        if (result.error) {
+            throw new Error(result.error);
+        }
+
+        alert(result.message);
+    } catch (error) {
+        alert(`Submission failed: ${error.message}`);
+    }
+}
 
         window.onload = () => {
             loadCounties();
