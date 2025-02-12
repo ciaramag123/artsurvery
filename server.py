@@ -119,10 +119,12 @@ def submit_survey():
 def get_counties():
     """Returns a list of counties for the dropdown."""
     counties = [
-        "Dublin", "Cork", "Galway", "Limerick", "Waterford", "Kilkenny", "Wexford", "Mayo",
-        "Kerry", "Donegal", "Longford", "Louth", "Westmeath", "Meath", "Roscommon",
-        "Sligo", "Carlow", "Clare", "Offaly", "Tipperary", "Leitrim", "Cavan", "Monaghan"
-    ]
+    "Dublin", "Cork", "Galway", "Limerick", "Waterford", "Kilkenny", "Wexford", "Mayo",
+    "Kerry", "Donegal", "Longford", "Louth", "Westmeath", "Meath", "Roscommon",
+    "Sligo", "Carlow", "Clare", "Offaly", "Tipperary", "Leitrim", "Cavan", "Monaghan",
+    "Laois", "Kildare", "Wicklow"
+]
+
     return jsonify(counties)
 
 # Route to view survey responses
